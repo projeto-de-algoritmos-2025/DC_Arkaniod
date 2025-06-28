@@ -22,6 +22,8 @@ O projeto implementa o algoritmo de mediana das medianas cujo o objetivo vai ser
 
 ## Video de Apresentação
 
+[Apresentação](https://youtu.be/sLzHNpucdaA)
+
 
 ## Screenshots
 ![logo](assets/Arkanoid.png)
