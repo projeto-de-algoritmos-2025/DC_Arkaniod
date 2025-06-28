@@ -36,14 +36,6 @@ install-deps:
 	sudo apt-get update
 	sudo apt-get install -y libsdl2-dev libsdl2-ttf-dev
 
-# Instalação das dependências (Fedora)
-install-deps-fedora:
-	sudo dnf install -y SDL2-devel SDL2_ttf-devel
-
-# Instalação das dependências (Arch)
-install-deps-arch:
-	sudo pacman -S sdl2 sdl2_ttf
-
 help:
 	@echo "Comandos disponíveis:"
 	@echo "  make        - Compila o jogo"
