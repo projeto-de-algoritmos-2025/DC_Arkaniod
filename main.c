@@ -15,16 +15,16 @@ typedef struct {
     SDL_Rect rect;
 } Block;
 
-// Estrutura para o sistema de dificuldade dinâmica
+// Estrutura para o sistema de dificuldade
 typedef struct {
     int frameCount;
-    float recentSpeeds[100];  // Velocidades dos últimos 100 frames
+    float recentSpeeds[100];  
     int speedIndex;
     float baseSpeed;
     float difficultyMultiplier;
-    int timeBasedDifficulty;  // Contador para dificuldade baseada no tempo
-    int stabilityCounter;     // Contador para estabilizar mudanças
-    float verticalAcceleration; // Aceleração vertical para dificultar
+    int timeBasedDifficulty;  
+    int stabilityCounter;     
+    float verticalAcceleration; 
 } DynamicDifficulty;
 
 // Estrutura para o sistema de pontuação inteligente
@@ -75,7 +75,6 @@ int selectKth(int arr[], int left, int right, int k) {
         }
         int medOfMed = (i == 1) ? median[0] : selectKth(median, 0, i - 1, i / 2);
 
-        // Particionamento
         int temp, j;
         for (j = left; j <= right; j++) {
             if (arr[j] == medOfMed) {
@@ -103,7 +102,6 @@ int selectKth(int arr[], int left, int right, int k) {
     return -1;
 }
 
-// Versão para float do algoritmo da mediana das medianas
 void insertionSortFloat(float arr[], int left, int right) {
     int i, j;
     float key;
@@ -134,7 +132,6 @@ float selectKthFloat(float arr[], int left, int right, int k) {
         }
         float medOfMed = (i == 1) ? median[0] : selectKthFloat(median, 0, i - 1, i / 2);
 
-        // Particionamento
         float temp;
         int j;
         for (j = left; j <= right; j++) {
@@ -164,7 +161,6 @@ float selectKthFloat(float arr[], int left, int right, int k) {
     return -1.0f;
 }
 
-// Função para calcular a mediana de um array de floats
 float calculateMedian(float arr[], int size) {
     if (size <= 0) return 0.0f;
     
@@ -175,12 +171,10 @@ float calculateMedian(float arr[], int size) {
     
     float median;
     if (size % 2 == 0) {
-        // Se o tamanho é par, pega a média dos dois elementos do meio
         float med1 = selectKthFloat(tempArr, 0, size - 1, size / 2);
         float med2 = selectKthFloat(tempArr, 0, size - 1, size / 2 + 1);
         median = (med1 + med2) / 2.0f;
     } else {
-        // Se o tamanho é ímpar, pega o elemento do meio
         median = selectKthFloat(tempArr, 0, size - 1, size / 2 + 1);
     }
     
@@ -188,7 +182,7 @@ float calculateMedian(float arr[], int size) {
     return median;
 }
 
-// Inicializa o sistema de dificuldade dinâmica
+// Inicializa o sistema de dificuldade
 void initDynamicDifficulty(DynamicDifficulty* diff) {
     diff->frameCount = 0;
     diff->speedIndex = 0;
@@ -200,82 +194,66 @@ void initDynamicDifficulty(DynamicDifficulty* diff) {
     memset(diff->recentSpeeds, 0, sizeof(diff->recentSpeeds));
 }
 
-// Atualiza a dificuldade baseada na mediana das velocidades
 void updateDynamicDifficulty(DynamicDifficulty* diff, Ball* ball) {
-    // Calcula a velocidade atual da bola
     float currentSpeed = sqrt(ball->vx * ball->vx + ball->vy * ball->vy);
     
-    // Adiciona à lista de velocidades recentes
     diff->recentSpeeds[diff->speedIndex] = currentSpeed;
     diff->speedIndex = (diff->speedIndex + 1) % SPEED_HISTORY_SIZE;
     diff->frameCount++;
     
-    // A cada 60 frames (mais lento para estabilidade), recalcula a dificuldade
     if (diff->frameCount % 60 == 0 && diff->frameCount >= 100) {
         int actualSize = (diff->frameCount < SPEED_HISTORY_SIZE) ? diff->frameCount : SPEED_HISTORY_SIZE;
         float medianSpeed = calculateMedian(diff->recentSpeeds, actualSize);
         
-        // Debug: imprime informações para verificar se está funcionando
         printf("Frame: %d, Current Speed: %.2f, Median Speed: %.2f, Base Speed: %.2f\n", 
                diff->frameCount, currentSpeed, medianSpeed, diff->baseSpeed);
         
-        // SOLUÇÃO 3: Dificuldade baseada no tempo de jogo (mais agressiva)
         diff->timeBasedDifficulty++;
-        if (diff->timeBasedDifficulty >= 15) { // A cada 15 ajustes (15 segundos)
-            diff->difficultyMultiplier = 1.08f; // Aumenta 8% a cada 15 segundos
+        if (diff->timeBasedDifficulty >= 15) { 
+            diff->difficultyMultiplier = 1.08f; 
             printf("Dificuldade baseada no TEMPO: +8%% (%.2f)\n", diff->difficultyMultiplier);
-            diff->timeBasedDifficulty = 0; // Reset do contador
+            diff->timeBasedDifficulty = 0; 
             
-            // Aumenta a aceleração vertical para dificultar
             diff->verticalAcceleration += 0.1f;
             printf("Aceleração vertical aumentada para: %.2f\n", diff->verticalAcceleration);
         } else {
-            // Sistema mais estável: só muda se a diferença for significativa
             diff->stabilityCounter++;
             
-            // Só muda a dificuldade a cada 3 verificações (mais estável)
             if (diff->stabilityCounter >= 3) {
-                if (medianSpeed > diff->baseSpeed * 1.3f) { // Limite mais alto
-                    // Se a mediana está muito alta, diminui a velocidade
-                    diff->difficultyMultiplier = 0.85f; // Diminuição mais agressiva
+                if (medianSpeed > diff->baseSpeed * 1.3f) { 
+                    diff->difficultyMultiplier = 0.85f; 
                     printf("Dificuldade DIMINUINDO: %.2f\n", diff->difficultyMultiplier);
-                } else if (medianSpeed < diff->baseSpeed * 0.7f) { // Limite mais baixo
-                    // Se a mediana está muito baixa, aumenta a velocidade
-                    diff->difficultyMultiplier = 1.15f; // Aumento mais agressivo
+                } else if (medianSpeed < diff->baseSpeed * 0.7f) { 
+                    diff->difficultyMultiplier = 1.15f; 
                     printf("Dificuldade AUMENTANDO: %.2f\n", diff->difficultyMultiplier);
                 } else {
-                    // Mantém a dificuldade estável
                     diff->difficultyMultiplier = 1.0f;
                     printf("Dificuldade ESTÁVEL: %.2f\n", diff->difficultyMultiplier);
                 }
-                diff->stabilityCounter = 0; // Reset do contador de estabilidade
+                diff->stabilityCounter = 0; 
             }
         }
         
-        // SOLUÇÃO 1: Aplica o multiplicador de dificuldade de forma acumulativa
         ball->vx *= diff->difficultyMultiplier;
         ball->vy *= diff->difficultyMultiplier;
         
-        // SOLUÇÃO 2: Aumenta gradualmente a baseSpeed para dificuldade crescente
-        if (diff->baseSpeed < 10.0f) { // Limite máximo aumentado
-            diff->baseSpeed += 0.05f; // Aumenta mais rapidamente
+        
+        if (diff->baseSpeed < 10.0f) { 
+            diff->baseSpeed += 0.05f; 
             printf("Base Speed aumentada para: %.2f\n", diff->baseSpeed);
         }
         
         printf("Velocidade ajustada: vx=%.2f, vy=%.2f\n", ball->vx, ball->vy);
     }
     
-    // Aplica aceleração vertical continuamente para dificultar
-    if (ball->vy > 0) { // Se a bola está descendo
-        ball->vy += diff->verticalAcceleration * 0.01f; // Acelera a descida
+    if (ball->vy > 0) { 
+        ball->vy += diff->verticalAcceleration * 0.01f; 
     }
 }
 
-// Sistema de pontuação inteligente baseado na mediana
 int calculateSmartScore(int baseScore, int recentScores[], int scoreCount) {
     if (scoreCount < 5) return baseScore;
     
-    // Calcula a mediana dos scores recentes
     int* tempScores = malloc(scoreCount * sizeof(int));
     if (!tempScores) return baseScore;
     
@@ -283,11 +261,10 @@ int calculateSmartScore(int baseScore, int recentScores[], int scoreCount) {
     int medianScore = selectKth(tempScores, 0, scoreCount - 1, scoreCount / 2 + 1);
     free(tempScores);
     
-    // Se o jogador está consistentemente fazendo muitos pontos, aumenta o bônus
     if (medianScore > 50) {
-        return baseScore + (baseScore / 2); // 50% de bônus
+        return baseScore + (baseScore / 2); 
     } else if (medianScore > 30) {
-        return baseScore + (baseScore / 4); // 25% de bônus
+        return baseScore + (baseScore / 4); 
     }
     
     return baseScore;
@@ -340,12 +317,10 @@ void handleCollisions(Ball* ball, SDL_Rect* paddle, Block* blocks, int* score, S
             blocks[i].active = false;
             ball->vy *= -1;
             
-            // Calcula score inteligente baseado na mediana
             int baseScore = 10;
             int smartPoints = calculateSmartScore(baseScore, smartScore->recentScores, smartScore->scoreCount);
             *score += smartPoints;
             
-            // Adiciona o score atual ao histórico
             smartScore->recentScores[smartScore->scoreIndex] = smartPoints;
             smartScore->scoreIndex = (smartScore->scoreIndex + 1) % 20;
             if (smartScore->scoreCount < 20) smartScore->scoreCount++;
@@ -416,11 +391,9 @@ int main() {
     bool running = true;
     SDL_Event e;
     
-    // Inicializa o sistema de dificuldade dinâmica (FORA do loop principal)
     DynamicDifficulty diff;
     initDynamicDifficulty(&diff);
     
-    // Inicializa o sistema de pontuação inteligente (FORA do loop principal)
     SmartScoring smartScore = { {0}, 0, 0 };
     
     while (running) {
@@ -455,10 +428,8 @@ int main() {
             ball.x += ball.vx;
             ball.y += ball.vy;
 
-            // Atualiza a dificuldade dinâmica
             updateDynamicDifficulty(&diff, &ball);
             
-            // Processa colisões com pontuação inteligente
             handleCollisions(&ball, &paddle, blocks, &score, &smartScore);
 
             if (ball.y > SCREEN_HEIGHT) {
